@@ -31,13 +31,16 @@ class AttendanceHome extends StatefulWidget {
   State<AttendanceHome> createState() => _AttendanceHomeState();
 }
 
-class _AttendanceHomeState extends State<AttendanceHome> {
+class _AttendanceHomeState extends State<AttendanceHome>
+    with SingleTickerProviderStateMixin {
   String? fileName;
   double threshold = 80.0;
   bool isLoading = false;
   double? overallPercentage;
   int? totalClasses, attendedClasses, missable;
   Map<String, List<String>> subjectData = {};
+
+  late AnimationController _controller;
 
   /// Fixed totals for missable calculation
   final Map<String, int> fixedTotals = {
@@ -51,6 +54,21 @@ class _AttendanceHomeState extends State<AttendanceHome> {
     "Environmental Studies": 15,
     "Essential Electronic Practices": 30,
   };
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 5),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   String normalizeSubject(String raw) {
     String subject = raw.replaceAll(RegExp(r'(T4|P4|U4|C1|CE|Sem I|Div C|Batch \\d+)', caseSensitive: false), '').trim();
@@ -139,20 +157,32 @@ class _AttendanceHomeState extends State<AttendanceHome> {
           total += subTotal;
           attended += subAttended;
 
-          // Missable calculation using fixed totals
           int fixedTotal = fixedTotals[subject] ?? subTotal;
           int allowedAbsences = (0.2 * fixedTotal).floor();
           int missed = subTotal - subAttended;
           int canMiss = allowedAbsences - missed;
           if (canMiss < 0) canMiss = 0;
 
-          subjectData[subject] = [
-            'Theory: ${data['Theory']!['P']}/${data['Theory']!['T']}',
-            'Tutorial: ${data['Tutorial']!['P']}/${data['Tutorial']!['T']}',
-            'Practical: ${data['Practical']!['P']}/${data['Practical']!['T']}',
-            'Total: $subAttended/$subTotal',
-            'You can miss: $canMiss classes (Threshold: ${threshold.toStringAsFixed(0)}%)'
-          ];
+          int classesRemaining = fixedTotal - subTotal;
+          if (classesRemaining < 0) classesRemaining = 0;
+
+          List<String> details = [];
+
+          if (!(data['Theory']!['T'] == 0 && data['Theory']!['P'] == 0)) {
+            details.add('Theory: ${data['Theory']!['P']}/${data['Theory']!['T']}');
+          }
+          if (!(data['Tutorial']!['T'] == 0 && data['Tutorial']!['P'] == 0)) {
+            details.add('Tutorial: ${data['Tutorial']!['P']}/${data['Tutorial']!['T']}');
+          }
+          if (!(data['Practical']!['T'] == 0 && data['Practical']!['P'] == 0)) {
+            details.add('Practical: ${data['Practical']!['P']}/${data['Practical']!['T']}');
+          }
+
+          details.add('Total: $subAttended/$subTotal');
+          details.add('You can miss: $canMiss classes');
+          details.add('Classes Remaining: $classesRemaining');
+
+          subjectData[subject] = details;
         });
 
         double overall = (attended / total) * 100;
@@ -177,36 +207,48 @@ class _AttendanceHomeState extends State<AttendanceHome> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F7FA),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: overallPercentage == null
-              ? Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text(
-                        'Attendance Tracker',
-                        style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-                      ),
-                      const SizedBox(height: 30),
-                      ElevatedButton(
-                        onPressed: isLoading ? null : processPdf,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.indigo,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(isLoading ? 'Processing...' : 'Select Attendance PDF'),
-                      ),
-                    ],
+        child: overallPercentage == null
+            ? Stack(
+                children: [
+                  AnimatedBuilder(
+                    animation: _controller,
+                    builder: (context, child) {
+                      return CustomPaint(
+                        painter: DiagonalLinesPainter(_controller.value),
+                        child: Container(color: Colors.blue[700]),
+                      );
+                    },
                   ),
-                )
-              : Column(
+                  Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Attendance Tracker',
+                          style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                        ),
+                        const SizedBox(height: 30),
+                        ElevatedButton(
+                          onPressed: isLoading ? null : processPdf,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.white,
+                            foregroundColor: Colors.blue[700],
+                            padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: Text(isLoading ? 'Processing...' : 'Select Attendance PDF'),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              )
+            : Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
                   children: [
                     Card(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -230,7 +272,6 @@ class _AttendanceHomeState extends State<AttendanceHome> {
                             const SizedBox(height: 12),
                             Text('Total Classes: $totalClasses'),
                             Text('Attended: $attendedClasses'),
-                            Text('Threshold: ${threshold.toStringAsFixed(0)}%'),
                           ],
                         ),
                       ),
@@ -268,6 +309,23 @@ class _AttendanceHomeState extends State<AttendanceHome> {
                                           ),
                                         ),
                                       );
+                                    } else if (line.startsWith('Classes Remaining')) {
+                                      return Container(
+                                        margin: const EdgeInsets.only(top: 8),
+                                        padding: const EdgeInsets.all(8),
+                                        decoration: BoxDecoration(
+                                          color: Colors.blue[50],
+                                          borderRadius: BorderRadius.circular(8),
+                                          border: Border.all(color: Colors.blue, width: 1),
+                                        ),
+                                        child: Text(
+                                          line,
+                                          style: TextStyle(
+                                            color: Colors.blue[800],
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      );
                                     } else {
                                       return Text(line);
                                     }
@@ -294,8 +352,34 @@ class _AttendanceHomeState extends State<AttendanceHome> {
                     ),
                   ],
                 ),
-        ),
+              ),
       ),
     );
   }
+}
+
+class DiagonalLinesPainter extends CustomPainter {
+  final double progress;
+  DiagonalLinesPainter(this.progress);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.lightBlueAccent.withOpacity(0.3)
+      ..strokeWidth = 2;
+
+    double spacing = 40;
+    double offset = progress * spacing * 2;
+
+    for (double i = -size.height; i < size.width; i += spacing) {
+      canvas.drawLine(
+        Offset(i + offset, 0),
+        Offset(i - size.height + offset, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
