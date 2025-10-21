@@ -1,0 +1,37 @@
+name: attendance_parser
+description: Attendance Tracker with PDF parsing and daily notifications
+publish_to: "none"
+
+environment:
+  sdk: ">=3.0.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Your original app deps
+  file_picker: ^8.0.0
+  syncfusion_flutter_pdf: ^26.1.42
+  percent_indicator: ^4.2.3
+  path_provider: ^2.1.4
+  flutter_tesseract_ocr: ^0.4.24
+  webview_flutter: ^4.7.0
+  webview_windows: ^0.4.0
+  url_launcher: ^6.3.0
+  intl: ^0.19.0
+  http: ^1.2.2
+
+  # Notifications + timezone for scheduling (Cross-platform)
+  flutter_local_notifications: ^17.0.0
+  timezone: ^0.9.2
+  # For cross-platform notifications
+  firebase_core: ^2.24.2
+  firebase_messaging: ^14.7.10
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
+
+flutter:
+  uses-material-design: true
