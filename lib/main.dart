@@ -38,18 +38,27 @@ class AttendanceHome extends StatefulWidget {
 enum LecType { theory, practical, tutorial }
 
 /// Total semester load for each subject (used for "classes remaining" calculation)
+/// Weekly load × 15 weeks per semester
 final Map<String, Map<LecType, int>> weeklyLoad = {
   'LINEAR ALGEBRA AND DIFFERENTIAL EQUATIONS': {
-    LecType.theory: 45,
-    LecType.practical: 30,
+    LecType.theory: 45, // 3 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
   },
   'QUANTUM PHYSICS': {
-    LecType.theory: 30,
-    LecType.practical: 30,
+    LecType.theory: 30, // 2 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'ELEMENTS OF BIOLOGY': {
+    LecType.theory: 30, // 2 per week × 15 weeks
+  },
+  'MANAGEMENT ACCOUNTING FOR ENGINEERS': {
+    LecType.theory: 30, // 2 per week × 15 weeks
   },
   'OBJECT ORIENTED PROGRAMMING': {
-    LecType.theory: 30,
-    LecType.practical: 30,
+    LecType.theory: 30, // 2 per week × 15 weeks
+  },
+  'OBJECT ORIENTED PROGRAMMING LAB': {
+    LecType.practical: 30, // 2 per week × 15 weeks
   },
   'BASIC ELECTRICAL AND ELECTRONICS ENGINEERING': {
     LecType.theory: 30,
@@ -60,14 +69,20 @@ final Map<String, Map<LecType, int>> weeklyLoad = {
     LecType.tutorial: 30,
   },
   'PRODUCT REALIZATION': {
-    LecType.theory: 15,
-    LecType.practical: 30,
+    LecType.theory: 15, // 1 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'TRANSFORMING IDEAS TO INNOVATION': {
+    LecType.practical: 30, // 2 per week × 15 weeks
   },
   'CONSTITUTION OF INDIA': {
     LecType.theory: 15,
   },
   'ENGLISH COMMUNICATION': {
-    LecType.practical: 30,
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'ENVIRONMENTAL SCIENCE': {
+    LecType.theory: 15, // 1 per week × 15 weeks
   },
 };
 
@@ -120,7 +135,16 @@ class AttendanceHomeState extends State<AttendanceHome>
       return "LINEAR ALGEBRA AND DIFFERENTIAL EQUATIONS";
     } else if (upper.contains("QUANTUM")) {
       return "QUANTUM PHYSICS";
+    } else if (upper.contains("BIOLOGY") || upper.contains("EOB")) {
+      return "ELEMENTS OF BIOLOGY";
+    } else if (upper.contains("MANAGEMENT") ||
+        upper.contains("ACCOUNTING") ||
+        upper.contains("MAE")) {
+      return "MANAGEMENT ACCOUNTING FOR ENGINEERS";
     } else if (upper.contains("OBJECT ORIENTED") || upper.contains("OOP")) {
+      if (upper.contains("LAB") || upper.contains("OOP-L")) {
+        return "OBJECT ORIENTED PROGRAMMING LAB";
+      }
       return "OBJECT ORIENTED PROGRAMMING";
     } else if (upper.contains("ELECTRICAL") ||
         upper.contains("ELECTRONICS") ||
@@ -130,10 +154,16 @@ class AttendanceHomeState extends State<AttendanceHome>
       return "WEB DEVELOPMENT";
     } else if (upper.contains("PRODUCT")) {
       return "PRODUCT REALIZATION";
+    } else if (upper.contains("TRANSFORM") ||
+        upper.contains("INNOVATION") ||
+        upper.contains("TII")) {
+      return "TRANSFORMING IDEAS TO INNOVATION";
     } else if (upper.contains("ENGLISH")) {
       return "ENGLISH COMMUNICATION";
     } else if (upper.contains("CONSTITUTION")) {
       return "CONSTITUTION OF INDIA";
+    } else if (upper.contains("ENVIRONMENT") || upper.contains("ES")) {
+      return "ENVIRONMENTAL SCIENCE";
     }
     return subject;
   }
@@ -436,7 +466,7 @@ class AttendanceHomeState extends State<AttendanceHome>
               )
             : Padding(
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
+                child: ListView(
                   children: [
                     Card(
                       shape: RoundedRectangleBorder(
@@ -549,133 +579,127 @@ class AttendanceHomeState extends State<AttendanceHome>
                       ),
                     ),
                     const SizedBox(height: 16),
-                    Expanded(
-                      child: ListView(
-                        children: subjectData.entries.map((entry) {
-                          final details = entry.value;
-                          final percentage = details['percentage'] as double;
-                          final canMiss = details['canMiss'] as int;
-                          final classesRemaining =
-                              details['classesRemaining'] as int;
-                          final types = details['types'] as List;
+                    ...subjectData.entries.map((entry) {
+                      final details = entry.value;
+                      final percentage = details['percentage'] as double;
+                      final canMiss = details['canMiss'] as int;
+                      final classesRemaining =
+                          details['classesRemaining'] as int;
+                      final types = details['types'] as List;
 
-                          return Card(
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                              side: BorderSide(
-                                  color: Colors.grey[400]!, width: 2),
-                            ),
-                            elevation: 3,
-                            margin: const EdgeInsets.symmetric(vertical: 8),
-                            child: Padding(
-                              padding: const EdgeInsets.all(16.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
+                      return Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(color: Colors.grey[400]!, width: 2),
+                        ),
+                        elevation: 3,
+                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              entry.key,
-                                              style: const TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            Container(
-                                              margin:
-                                                  const EdgeInsets.only(top: 4),
-                                              height: 2,
-                                              width: double.infinity,
-                                              color: Colors.grey[400],
-                                            ),
-                                          ],
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          entry.key,
+                                          style: const TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(width: 16),
-                                      Text(
-                                        '${percentage.toStringAsFixed(1)}%',
-                                        style: TextStyle(
-                                          fontSize: 24,
-                                          fontWeight: FontWeight.bold,
-                                          color: percentage >= threshold
-                                              ? Colors.green
-                                              : Colors.red,
+                                        Container(
+                                          margin: const EdgeInsets.only(top: 4),
+                                          height: 2,
+                                          width: double.infinity,
+                                          color: Colors.grey[400],
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 12),
-                                  ...types.map((type) {
-                                    final name = type['name'] as String;
-                                    final attended = type['attended'] as int;
-                                    final total = type['total'] as int;
-
-                                    return Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 12, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Colors.grey[100],
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '$name: Attended [ $attended ] out of [ $total ]',
-                                        style: const TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    );
-                                  }),
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 8),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.green[50],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                          color: Colors.green, width: 1),
-                                    ),
-                                    child: Text(
-                                      'You can miss: $canMiss classes',
-                                      style: TextStyle(
-                                        color: Colors.green[800],
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                      ],
                                     ),
                                   ),
-                                  Container(
-                                    margin: const EdgeInsets.only(top: 8),
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: Colors.blue[50],
-                                      borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(
-                                          color: Colors.blue, width: 1),
-                                    ),
-                                    child: Text(
-                                      'Classes Remaining: $classesRemaining',
-                                      style: TextStyle(
-                                        color: Colors.blue[800],
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                                  const SizedBox(width: 16),
+                                  Text(
+                                    '${percentage.toStringAsFixed(1)}%',
+                                    style: TextStyle(
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                      color: percentage >= threshold
+                                          ? Colors.green
+                                          : Colors.red,
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                              const SizedBox(height: 12),
+                              ...types.map((type) {
+                                final name = type['name'] as String;
+                                final attended = type['attended'] as int;
+                                final total = type['total'] as int;
+
+                                return Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    '$name: Attended [ $attended ] out of [ $total ]',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                );
+                              }),
+                              Container(
+                                margin: const EdgeInsets.only(top: 8),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.green[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: Colors.green, width: 1),
+                                ),
+                                child: Text(
+                                  'You can miss: $canMiss classes',
+                                  style: TextStyle(
+                                    color: Colors.green[800],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(top: 8),
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue[50],
+                                  borderRadius: BorderRadius.circular(8),
+                                  border:
+                                      Border.all(color: Colors.blue, width: 1),
+                                ),
+                                child: Text(
+                                  'Classes Remaining: $classesRemaining',
+                                  style: TextStyle(
+                                    color: Colors.blue[800],
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    }),
                     const SizedBox(height: 16),
                     ElevatedButton(
                       onPressed: isLoading
