@@ -83,6 +83,13 @@ class AttendanceHomeState extends State<AttendanceHome>
 
   late AnimationController _controller;
 
+  void _showGuide() {
+    showDialog(
+      context: context,
+      builder: (context) => const GuideDialog(),
+    );
+  }
+
   @override
   void initState() {
     super.initState();
@@ -160,22 +167,20 @@ class AttendanceHomeState extends State<AttendanceHome>
       String text = PdfTextExtractor(document).extractText();
       document.dispose();
 
+      // Remove newlines first to make parsing easier
+      text = text.replaceAll('\n', ' ');
+
       // Extract student name from PDF header
-      // Format: "ARNAV KALRA Student Name" - the name comes BEFORE the label
-      final nameMatch = RegExp(r'NMIMS\s+([A-Z][A-Za-z\s]+?)\s+Student Name',
-              caseSensitive: false)
-          .firstMatch(text);
+      // Format: "SVKM'S NMIMS PRANJAL OM PRAKASH PATHAKStudent Name"
+      // Get first word after NMIMS
+      final nameMatch =
+          RegExp(r'NMIMS\s+([A-Z]+)', caseSensitive: false).firstMatch(text);
       if (nameMatch != null) {
         studentName = nameMatch.group(1)?.trim();
+        print('DEBUG: Found student name: $studentName'); // Debug
       } else {
-        // Fallback: try pattern "Name Student Name"
-        final fallbackMatch =
-            RegExp(r'([A-Z][A-Z\s]+)\s+Student Name', caseSensitive: true)
-                .firstMatch(text);
-        studentName = fallbackMatch?.group(1)?.trim();
+        print('DEBUG: Student name not found in PDF'); // Debug
       }
-
-      text = text.replaceAll('\n', ' ');
       // Flexible regex: optional row num, subject, date, times, status (any chars)
       final rowPattern = RegExp(
         r'(?:\d+\s+)?(.+?)\s+((?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d{1,2},\s+\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?\s[AP]M)\s+(\d{1,2}:\d{2}(?::\d{2})?\s[AP]M)\s+(\S+)',
@@ -366,15 +371,15 @@ class AttendanceHomeState extends State<AttendanceHome>
                               onPressed: () async {
                                 final Uri url = Uri.parse(
                                     'https://sdc-sppap1.svkm.ac.in:50001/irj/portal');
-                                if (await canLaunchUrl(url)) {
+                                try {
                                   await launchUrl(url,
                                       mode: LaunchMode.externalApplication);
-                                } else {
+                                } catch (e) {
                                   if (context.mounted) {
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                          content:
-                                              Text('Could not open the link')),
+                                      SnackBar(
+                                          content: Text(
+                                              'Could not open the link: $e')),
                                     );
                                   }
                                 }
@@ -394,6 +399,25 @@ class AttendanceHomeState extends State<AttendanceHome>
                         ),
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    Opacity(
+                      opacity: 0.7,
+                      child: ElevatedButton.icon(
+                        onPressed: _showGuide,
+                        icon: const Icon(Icons.help_outline, size: 20),
+                        label: const Text('Guide'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: Colors.black,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 32, vertical: 12),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(vertical: 10.0),
@@ -422,22 +446,86 @@ class AttendanceHomeState extends State<AttendanceHome>
                         padding: const EdgeInsets.all(20.0),
                         child: Column(
                           children: [
-                            if (studentName != null)
+                            if (studentName != null && studentName!.isNotEmpty)
                               Padding(
-                                padding: const EdgeInsets.only(bottom: 12),
+                                padding: const EdgeInsets.only(bottom: 16),
                                 child: Text(
-                                  studentName!,
+                                  'Hello, ${studentName!.split(' ').first}!',
                                   style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w600,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
                                     color: Colors.indigo[700],
                                   ),
                                 ),
                               ),
+                            Wrap(
+                              alignment: WrapAlignment.center,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: [
+                                const Text(
+                                  'Classes Attended:',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: Colors.green, width: 2),
+                                  ),
+                                  child: Text(
+                                    '$attendedClasses',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.green[900],
+                                    ),
+                                  ),
+                                ),
+                                const Text(
+                                  '/',
+                                  style: TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const Text(
+                                  'Classes Occurred:',
+                                  style: TextStyle(fontSize: 18),
+                                ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blue[100],
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                        color: Colors.blue, width: 2),
+                                  ),
+                                  child: Text(
+                                    '$totalClasses',
+                                    style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue[900],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
                             Text(
-                              'Overall Attendance: ${overallPercentage!.toStringAsFixed(2)}%',
-                              style: const TextStyle(
-                                  fontSize: 22, fontWeight: FontWeight.bold),
+                              'Overall: ${overallPercentage!.toStringAsFixed(2)}%',
+                              style: TextStyle(
+                                fontSize: 22,
+                                fontWeight: FontWeight.bold,
+                                color: overallPercentage! >= threshold
+                                    ? Colors.green
+                                    : Colors.red,
+                              ),
                             ),
                             const SizedBox(height: 10),
                             LinearPercentIndicator(
@@ -450,11 +538,6 @@ class AttendanceHomeState extends State<AttendanceHome>
                                   : Colors.red,
                               animation: true,
                             ),
-                            const SizedBox(height: 12),
-                            Text('Classes Occurred: $totalClasses',
-                                style: const TextStyle(fontSize: 16)),
-                            Text('Attended: $attendedClasses',
-                                style: const TextStyle(fontSize: 16)),
                             const SizedBox(height: 12),
                             const Row(
                               children: [
@@ -623,6 +706,162 @@ class AttendanceHomeState extends State<AttendanceHome>
                   ],
                 ),
               ),
+      ),
+    );
+  }
+}
+
+/// Guide Dialog Widget
+class GuideDialog extends StatefulWidget {
+  const GuideDialog({super.key});
+
+  @override
+  State<GuideDialog> createState() => _GuideDialogState();
+}
+
+class _GuideDialogState extends State<GuideDialog> {
+  int currentStep = 0;
+  final List<String> guideImages = [
+    'assets/guide/step1.png',
+    'assets/guide/step2.png',
+    'assets/guide/step3.png',
+  ];
+
+  void _nextStep() {
+    if (currentStep < guideImages.length - 1) {
+      setState(() {
+        currentStep++;
+      });
+    }
+  }
+
+  void _previousStep() {
+    if (currentStep > 0) {
+      setState(() {
+        currentStep--;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.all(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.indigo,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Step ${currentStep + 1} of ${guideImages.length}',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: Colors.white),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+            ),
+            // Image
+            Flexible(
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(context).size.height * 0.6,
+                ),
+                child: InteractiveViewer(
+                  child: Image.asset(
+                    guideImages[currentStep],
+                    fit: BoxFit.contain,
+                    errorBuilder: (context, error, stackTrace) {
+                      return Container(
+                        padding: const EdgeInsets.all(32),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.image_not_supported,
+                              size: 64,
+                              color: Colors.grey,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Image not found.\nPlease add guide images to assets/guide/\n(step1.png, step2.png, step3.png)',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Colors.grey[600],
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+            ),
+            // Navigation buttons
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: currentStep > 0 ? _previousStep : null,
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Previous'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed:
+                        currentStep < guideImages.length - 1 ? _nextStep : null,
+                    icon: const Icon(Icons.arrow_forward),
+                    label: const Text('Next'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.indigo,
+                      foregroundColor: Colors.white,
+                      disabledBackgroundColor: Colors.grey[300],
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
