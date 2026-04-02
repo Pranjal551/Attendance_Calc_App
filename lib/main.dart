@@ -50,6 +50,7 @@ final Map<String, Map<LecType, int>> weeklyLoad = {
   },
   'ELEMENTS OF BIOLOGY': {
     LecType.theory: 30, // 2 per week × 15 weeks
+    LecType.practical: 15, // 1 per week × 15 weeks
   },
   'MANAGEMENT ACCOUNTING FOR ENGINEERS': {
     LecType.theory: 30, // 2 per week × 15 weeks
@@ -83,6 +84,30 @@ final Map<String, Map<LecType, int>> weeklyLoad = {
   },
   'ENVIRONMENTAL SCIENCE': {
     LecType.theory: 15, // 1 per week × 15 weeks
+  },
+  'STATISTICAL METHODS': {
+    LecType.theory: 30, // 2 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'MACHINE LEARNING': {
+    LecType.theory: 15, // 1 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'INTRODUCTION TO DATA SIGNAL AND IMAGE ANALYSIS': {
+    LecType.theory: 45, // 3 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'DATABASE MANAGEMENT SYSTEMS': {
+    LecType.theory: 30, // 2 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'WEB PROGRAMMING': {
+    LecType.theory: 30, // 2 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
+  },
+  'DATA HANDLING AND VISUALIZATION': {
+    LecType.theory: 15, // 1 per week × 15 weeks
+    LecType.practical: 30, // 2 per week × 15 weeks
   },
 };
 
@@ -150,6 +175,11 @@ class AttendanceHomeState extends State<AttendanceHome>
         upper.contains("ELECTRONICS") ||
         upper.contains("ELECTR")) {
       return "BASIC ELECTRICAL AND ELECTRONICS ENGINEERING";
+    } else if (upper.contains("WEB DEVELOPMENT")) {
+      return "WEB DEVELOPMENT";
+    } else if (upper.contains("WEB PROGRAMMING") ||
+        upper.contains("WEB PROG")) {
+      return "WEB PROGRAMMING";
     } else if (upper.contains("WEB")) {
       return "WEB DEVELOPMENT";
     } else if (upper.contains("PRODUCT")) {
@@ -164,6 +194,18 @@ class AttendanceHomeState extends State<AttendanceHome>
       return "CONSTITUTION OF INDIA";
     } else if (upper.contains("ENVIRONMENT") || upper.contains("ES")) {
       return "ENVIRONMENTAL SCIENCE";
+    } else if (upper.contains("STATISTICAL")) {
+      return "STATISTICAL METHODS";
+    } else if (upper.contains("MACHINE LEARNING") || upper.contains("ML")) {
+      return "MACHINE LEARNING";
+    } else if ((upper.contains("DATA") && upper.contains("SIGNAL")) ||
+        upper.contains("IMAGE ANALYSIS")) {
+      return "INTRODUCTION TO DATA SIGNAL AND IMAGE ANALYSIS";
+    } else if (upper.contains("DATABASE") || upper.contains("DBMS")) {
+      return "DATABASE MANAGEMENT SYSTEMS";
+    } else if ((upper.contains("DATA") && upper.contains("HANDLING")) ||
+        upper.contains("VISUALIZATION")) {
+      return "DATA HANDLING AND VISUALIZATION";
     }
     return subject;
   }
