@@ -38,76 +38,37 @@ class AttendanceHome extends StatefulWidget {
 enum LecType { theory, practical, tutorial }
 
 /// Total semester load for each subject (used for "classes remaining" calculation)
-/// Weekly load × 15 weeks per semester
 final Map<String, Map<LecType, int>> weeklyLoad = {
-  'LINEAR ALGEBRA AND DIFFERENTIAL EQUATIONS': {
-    LecType.theory: 45, // 3 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'QUANTUM PHYSICS': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'ELEMENTS OF BIOLOGY': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-    LecType.practical: 15, // 1 per week × 15 weeks
-  },
-  'MANAGEMENT ACCOUNTING FOR ENGINEERS': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-  },
-  'OBJECT ORIENTED PROGRAMMING': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-  },
-  'OBJECT ORIENTED PROGRAMMING LAB': {
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'BASIC ELECTRICAL AND ELECTRONICS ENGINEERING': {
+  'PROBABILITY AND STATISTICS': {
     LecType.theory: 30,
     LecType.practical: 30,
   },
-  'WEB DEVELOPMENT': {
+  'DISCRETE MATHEMATICS': {
+    LecType.theory: 30,
+    LecType.tutorial: 15,
+  },
+  'SIGNALS AND SYSTEMS': {
+    LecType.theory: 30,
     LecType.practical: 30,
-    LecType.tutorial: 30,
   },
-  'PRODUCT REALIZATION': {
-    LecType.theory: 15, // 1 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
+  'COMPUTER ORGANIZATION AND ARCHITECTURE': {
+    LecType.theory: 45,
   },
-  'TRANSFORMING IDEAS TO INNOVATION': {
-    LecType.practical: 30, // 2 per week × 15 weeks
+  'DATA STRUCTURES AND ALGORITHMS': {
+    LecType.theory: 45,
   },
-  'CONSTITUTION OF INDIA': {
+  'DATA STRUCTURES AND ALGORITHMS LAB': {
+    LecType.practical: 30,
+  },
+  'PRINCIPLES OF ECONOMICS AND MANAGEMENT': {
+    LecType.theory: 45,
+  },
+  'PROGRAMMING WITH PYTHON': {
     LecType.theory: 15,
+    LecType.practical: 30,
   },
-  'ENGLISH COMMUNICATION': {
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'ENVIRONMENTAL SCIENCE': {
-    LecType.theory: 15, // 1 per week × 15 weeks
-  },
-  'STATISTICAL METHODS': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'MACHINE LEARNING': {
-    LecType.theory: 15, // 1 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'INTRODUCTION TO DATA SIGNAL AND IMAGE ANALYSIS': {
-    LecType.theory: 45, // 3 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'DATABASE MANAGEMENT SYSTEMS': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'WEB PROGRAMMING': {
-    LecType.theory: 30, // 2 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
-  },
-  'DATA HANDLING AND VISUALIZATION': {
-    LecType.theory: 15, // 1 per week × 15 weeks
-    LecType.practical: 30, // 2 per week × 15 weeks
+  'TECHNICAL COMMUNICATION': {
+    LecType.tutorial: 15,
   },
 };
 
@@ -156,56 +117,36 @@ class AttendanceHomeState extends State<AttendanceHome>
         .trim();
 
     final upper = subject.toUpperCase();
-    if (upper.contains("LINEAR ALGEBRA") || upper.contains("DIFFER")) {
-      return "LINEAR ALGEBRA AND DIFFERENTIAL EQUATIONS";
-    } else if (upper.contains("QUANTUM")) {
-      return "QUANTUM PHYSICS";
-    } else if (upper.contains("BIOLOGY") || upper.contains("EOB")) {
-      return "ELEMENTS OF BIOLOGY";
-    } else if (upper.contains("MANAGEMENT") ||
-        upper.contains("ACCOUNTING") ||
-        upper.contains("MAE")) {
-      return "MANAGEMENT ACCOUNTING FOR ENGINEERS";
-    } else if (upper.contains("OBJECT ORIENTED") || upper.contains("OOP")) {
-      if (upper.contains("LAB") || upper.contains("OOP-L")) {
-        return "OBJECT ORIENTED PROGRAMMING LAB";
-      }
-      return "OBJECT ORIENTED PROGRAMMING";
-    } else if (upper.contains("ELECTRICAL") ||
-        upper.contains("ELECTRONICS") ||
-        upper.contains("ELECTR")) {
-      return "BASIC ELECTRICAL AND ELECTRONICS ENGINEERING";
-    } else if (upper.contains("WEB DEVELOPMENT")) {
-      return "WEB DEVELOPMENT";
-    } else if (upper.contains("WEB PROGRAMMING") ||
-        upper.contains("WEB PROG")) {
-      return "WEB PROGRAMMING";
-    } else if (upper.contains("WEB")) {
-      return "WEB DEVELOPMENT";
-    } else if (upper.contains("PRODUCT")) {
-      return "PRODUCT REALIZATION";
-    } else if (upper.contains("TRANSFORM") ||
-        upper.contains("INNOVATION") ||
-        upper.contains("TII")) {
-      return "TRANSFORMING IDEAS TO INNOVATION";
-    } else if (upper.contains("ENGLISH")) {
-      return "ENGLISH COMMUNICATION";
-    } else if (upper.contains("CONSTITUTION")) {
-      return "CONSTITUTION OF INDIA";
-    } else if (upper.contains("ENVIRONMENT") || upper.contains("ES")) {
-      return "ENVIRONMENTAL SCIENCE";
-    } else if (upper.contains("STATISTICAL")) {
-      return "STATISTICAL METHODS";
-    } else if (upper.contains("MACHINE LEARNING") || upper.contains("ML")) {
-      return "MACHINE LEARNING";
-    } else if ((upper.contains("DATA") && upper.contains("SIGNAL")) ||
-        upper.contains("IMAGE ANALYSIS")) {
-      return "INTRODUCTION TO DATA SIGNAL AND IMAGE ANALYSIS";
-    } else if (upper.contains("DATABASE") || upper.contains("DBMS")) {
-      return "DATABASE MANAGEMENT SYSTEMS";
-    } else if ((upper.contains("DATA") && upper.contains("HANDLING")) ||
-        upper.contains("VISUALIZATION")) {
-      return "DATA HANDLING AND VISUALIZATION";
+
+    // DSA Lab must be checked before general DSA
+    if ((upper.contains('DSA') || upper.contains('DATA STRUCT')) &&
+        upper.contains('LAB')) {
+      return 'DATA STRUCTURES AND ALGORITHMS LAB';
+    } else if (upper.contains('DSA') ||
+        (upper.contains('DATA STRUCT') && upper.contains('ALGO'))) {
+      return 'DATA STRUCTURES AND ALGORITHMS';
+    } else if (upper.contains('PROB') && upper.contains('STAT') ||
+        upper.contains('PNS') ||
+        upper.contains('P&S')) {
+      return 'PROBABILITY AND STATISTICS';
+    } else if (upper.contains('DISCRETE') || upper.contains('DM')) {
+      return 'DISCRETE MATHEMATICS';
+    } else if (upper.contains('SIGNAL') && upper.contains('SYSTEM') ||
+        upper.contains('SNS') ||
+        upper.contains('S&S')) {
+      return 'SIGNALS AND SYSTEMS';
+    } else if (upper.contains('COMPUTER ORG') ||
+        upper.contains('ARCHITECTURE') ||
+        upper.contains('COA')) {
+      return 'COMPUTER ORGANIZATION AND ARCHITECTURE';
+    } else if (upper.contains('ECONOMICS') ||
+        upper.contains('MANAGEMENT') ||
+        upper.contains('PEM')) {
+      return 'PRINCIPLES OF ECONOMICS AND MANAGEMENT';
+    } else if (upper.contains('PYTHON')) {
+      return 'PROGRAMMING WITH PYTHON';
+    } else if (upper.contains('TECHNICAL COMM') || upper.contains(' TC')) {
+      return 'TECHNICAL COMMUNICATION';
     }
     return subject;
   }
