@@ -15,6 +15,6 @@ void main() {
     await tester.pumpWidget(const AttendanceApp());
 
     // Verify that the landing screen title is present.
-    expect(find.text('Attendance Tracker'), findsWidgets);
+    expect(find.text('Attendance Calc'), findsWidgets);
   });
 }
